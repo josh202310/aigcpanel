@@ -5,28 +5,32 @@ import { useSettingStore } from "./setting";
 
 const setting = useSettingStore();
 
+const createDefaultUser = () => ({
+    id: null as string | null,
+    name: null as string | null,
+    avatar: null as string | null,
+    deviceCode: null as string | null,
+});
+
+const createDefaultData = () => ({
+    vip: {
+        id: null as string | null,
+        flag: null as string | null,
+        title: null as string | null,
+        icon: null as string | null,
+        isDefault: true,
+    },
+    functions: {} as Record<string, any>,
+});
+
 export const userStore = defineStore("user", {
     state() {
         return {
             isInit: false,
             lastSavedJson: "",
             apiToken: null as string | null,
-            user: {
-                id: null as string | null,
-                name: null as string | null,
-                avatar: null as string | null,
-                deviceCode: null as string | null,
-            },
-            data: {
-                vip: {
-                    id: null as string | null,
-                    flag: null as string | null,
-                    title: null as string | null,
-                    icon: null as string | null,
-                    isDefault: true,
-                },
-                functions: {} as Record<string, any>,
-            } as {
+            user: createDefaultUser(),
+            data: createDefaultData() as {
                 vip: {
                     id: string | null;
                     flag: string | null;
@@ -50,8 +54,8 @@ export const userStore = defineStore("user", {
             const { apiToken, user, data, basic } =
                 await window.$mapi.user.get();
             this.apiToken = apiToken;
-            this.user = Object.assign(this.user, user);
-            this.data = data as any;
+            this.user = Object.assign(createDefaultUser(), user || {});
+            this.data = Object.assign(createDefaultData(), data || {}) as any;
             this.basic = basic;
             await setting.initBasic(this.basic);
             this.isInit = true;

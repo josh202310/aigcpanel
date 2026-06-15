@@ -1,6 +1,7 @@
 import packageJson from "../package.json";
 
 const BASE_URL = "https://aigcpanel.com";
+const MEMBER_API_BASE_URL = "http://127.0.0.1:18080/api";
 
 export const AppConfig = {
     name: "AIGCPanel",
@@ -11,6 +12,7 @@ export const AppConfig = {
     websiteGithub: "https://github.com/modstart-lib/aigcpanel",
     websiteGitee: "https://gitee.com/modstart-lib/aigcpanel",
     apiBaseUrl: `${BASE_URL}/api`,
+    memberApiBaseUrl: MEMBER_API_BASE_URL,
     updaterUrl: `${BASE_URL}/app_manager/updater/open`,
     downloadUrl: `${BASE_URL}/app_manager/download`,
     feedbackUrl: `${BASE_URL}/feedback_ticket`,
@@ -19,6 +21,6 @@ export const AppConfig = {
     helpUrl: `${BASE_URL}/app_manager/help`,
     serverUrl: `${BASE_URL}/aigcpanel/`,
     basic: {
-        userEnable: false,
+        userEnable: true,
     },
 };

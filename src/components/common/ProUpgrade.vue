@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { AppConfig } from "../../config";
-import { t } from "../../lang";
-
 const props = defineProps({
     desc: {
         type: String,
         default: "",
     },
 });
+
+const openMemberCenter = async () => {
+    await window.$mapi.user.open();
+};
 </script>
 
 <template>
@@ -48,16 +49,17 @@ const props = defineProps({
                 {{ desc || $t("proUpgrade.defaultDesc") }}
             </p>
             <div>
-                <a
+                <a-button
                     class="arco-btn arco-btn-size-large arco-btn-primary px-8 rounded-full shadow-blue-200 shadow-lg hover:shadow-xl transition-all"
-                    :href="AppConfig.website"
-                    target="_blank"
+                    type="primary"
+                    size="large"
+                    @click="openMemberCenter"
                 >
-                    <icon-link />
+                    <icon-user />
                     <span class="ml-2">{{
                         $t("proUpgrade.downloadButton")
                     }}</span>
-                </a>
+                </a-button>
             </div>
         </div>
     </div>

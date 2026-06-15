@@ -10,7 +10,9 @@ import { Log } from "../log/main";
 
 const init = async () => {
     setTimeout(() => {
-        refresh().then();
+        refresh().catch((e) => {
+            Log.error("user.init.refresh.error", e);
+        });
     }, 1000);
     return null;
 };
@@ -26,6 +28,48 @@ const userData = {
     },
     data: {},
     basic: {},
+};
+
+const memberApiBaseUrl = () => {
+    return AppConfig.memberApiBaseUrl || AppConfig.apiBaseUrl;
+};
+
+const memberApiSet = new Set([
+    "app_manager/user_info",
+    "app_manager/user_web",
+    "app_manager/enter",
+    "user/info",
+    "user/login",
+    "user/register",
+    "user/logout",
+    "usage/check",
+    "usage/consume",
+    "usage/summary",
+    "usage/records",
+]);
+
+const normalizeMemberApi = (api: string) => {
+    if (api.startsWith("/")) {
+        api = api.substring(1);
+    }
+    switch (api) {
+        case "app_manager/user_info":
+            return "app_manager/user_info";
+        case "app_manager/user_web":
+            return "app_manager/user_web";
+        case "app_manager/enter":
+            return "app_manager/enter";
+        default:
+            return api;
+    }
+};
+
+const apiBaseFor = (api: string) => {
+    const normalized = normalizeMemberApi(api);
+    if (memberApiSet.has(normalized)) {
+        return memberApiBaseUrl();
+    }
+    return AppConfig.apiBaseUrl;
 };
 
 const get = async (): Promise<{
@@ -114,6 +158,9 @@ ipcMain.handle("user:save", async (event, data) => {
 const refresh = async () => {
     const result = await userInfoApi();
     // console.log("user.refresh", JSON.stringify(result, null, 2));
+    if (result.code) {
+        throw result.msg;
+    }
     await save({
         apiToken: result.data.apiToken,
         user: result.data.user,
@@ -146,7 +193,7 @@ const getWebEnterUrl = async (url: string) => {
     }
     param.push(`device_uuid=${platformUUID()}`);
     param.push(`url=${encodeURIComponent(url)}`);
-    return `${AppConfig.apiBaseUrl}/app_manager/enter?${param.join("&")}`;
+    return `${memberApiBaseUrl()}/app_manager/enter?${param.join("&")}`;
 };
 
 ipcMain.handle("user:getWebEnterUrl", async (event, url) => {
@@ -208,7 +255,8 @@ const post = async <T>(
     );
     let url = api;
     if (!api.startsWith("http:") && !api.startsWith("https:")) {
-        url = `${AppConfig.apiBaseUrl}/${api}`;
+        api = normalizeMemberApi(api);
+        url = `${apiBaseFor(api)}/${api}`;
     }
     const apiToken = await User.getApiToken();
     let json = null,

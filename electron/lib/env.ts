@@ -154,16 +154,17 @@ export const extraResolveWithPlatform = (filePath: string): string => {
 };
 
 export const extraResolveBin = (filePath: string): string => {
-    if (isWin) {
-        if (!filePath.endsWith(".exe")) {
-            filePath += ".exe";
-        }
+    const originalFilePath = filePath;
+    if (isWin && !filePath.endsWith(".exe")) {
+        filePath += ".exe";
     }
     const dir = [platformName(), platformArch()].join("-");
     const p = [dir, filePath].join("/");
     const binaryPath = extraResolve(p);
     if (!fs.existsSync(binaryPath)) {
-        throw new Error(`Binary file not found: ${binaryPath}`);
+        throw new Error(
+            `Binary file not found: ${binaryPath}. Please install ${originalFilePath} or set ${originalFilePath.toUpperCase()}_PATH.`,
+        );
     }
     return binaryPath;
 };

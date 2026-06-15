@@ -1,6 +1,9 @@
 import { computed, ref } from "vue";
 import { useUserStore } from "../store/modules/user";
 import { useSettingStore } from "../store/modules/setting";
+import { MemberPermissionService } from "../service/MemberPermissionService";
+import { Dialog } from "../lib/dialog";
+import { t } from "../lang";
 
 const setting = useSettingStore();
 
@@ -115,6 +118,35 @@ document.addEventListener('click', (event) => {
 
 export const useUser = () => {
     const store = useUserStore();
-    const isVip = computed(() => !store.data?.vip?.isDefault);
-    return { isVip, store };
+    const memberLevel = computed(() =>
+        MemberPermissionService.memberLevel(store),
+    );
+    const memberTitle = computed(() =>
+        MemberPermissionService.memberTitle(store),
+    );
+    const isVip = computed(() => MemberPermissionService.isMember(store));
+    const hasFeature = (featureKey: string, aliases: string[] = []) =>
+        computed(() =>
+            MemberPermissionService.hasFeature(store, featureKey, aliases),
+        );
+    const requireFeature = async (
+        featureKey: string,
+        aliases: string[] = [],
+        message = t("common.vipRequired"),
+    ) => {
+        if (MemberPermissionService.hasFeature(store, featureKey, aliases)) {
+            return true;
+        }
+        Dialog.tipError(message);
+        await MemberPermissionService.openMemberCenter();
+        return false;
+    };
+    return {
+        isVip,
+        memberLevel,
+        memberTitle,
+        hasFeature,
+        requireFeature,
+        store,
+    };
 };

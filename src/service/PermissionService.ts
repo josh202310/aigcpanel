@@ -1,9 +1,15 @@
 import { useServerStore } from "../store/modules/server";
+import { useServerCloudStore } from "../store/modules/serverCloud";
 import { EnumServerType } from "../types/Server";
 import { Dialog } from "../lib/dialog";
 import { t } from "../lang";
+import {
+    MEMBER_FEATURES,
+    MemberPermissionService,
+} from "./MemberPermissionService";
 
 const serverStore = useServerStore();
+const serverCloudStore = useServerCloudStore();
 export const PermissionService = {
     async checkForTask(
         biz: string,
@@ -12,10 +18,15 @@ export const PermissionService = {
             serverVersion: string;
         },
     ) {
-        const server = await serverStore.getByNameVersion(
-            data.serverName,
-            data.serverVersion,
-        );
+        const server =
+            (await serverStore.getByNameVersion(
+                data.serverName,
+                data.serverVersion,
+            )) ||
+            (await serverCloudStore.getByNameVersion(
+                data.serverName,
+                data.serverVersion,
+            ));
         if (!server) {
             throw "ServerNotFound";
         }
@@ -27,26 +38,17 @@ export const PermissionService = {
                 window.$mapi.user.open().then();
                 return false;
             }
-            const res = await window.$mapi.user.apiPost(
-                "aigcpanel/task/check",
-                {
-                    model: data.serverName,
-                    version: data.serverVersion,
-                },
-                {
-                    throwException: false,
-                },
+            const allowed = MemberPermissionService.hasFeature(
+                user,
+                MEMBER_FEATURES.CLOUD_TASK,
+                [MEMBER_FEATURES.CLOUD_MODEL, data.serverName, biz],
             );
             Dialog.loadingOff();
-            if (res.code) {
-                Dialog.tipError(res.msg);
+            if (!allowed) {
+                Dialog.tipError(t("common.vipRequired"));
                 setTimeout(() => {
-                    if (res.data && res.data.type) {
-                        if ("CreditNotEnough" === res.data.type) {
-                            window.$mapi.user.open().then();
-                        }
-                    }
-                }, 3000);
+                    window.$mapi.user.open().then();
+                }, 1200);
                 return false;
             }
         }

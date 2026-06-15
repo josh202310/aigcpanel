@@ -1,0 +1,71 @@
+{
+  "host": "127.0.0.1",
+  "port": 18080,
+  "database": "data/user_system.db",
+  "dev_auto_login": true,
+  "default_user": {
+    "username": "demo",
+    "password": "demo123456",
+    "name": "Demo User",
+    "avatar": ""
+  },
+  "default_member": {
+    "id": "local_default",
+    "flag": "local_pro",
+    "title": "本地 Pro 会员",
+    "icon": "",
+    "is_default": false
+  },
+  "default_functions": {
+    "all": true,
+    "pro": true,
+    "cloud_model": true,
+    "cloud_task": true,
+    "workflow": true,
+    "live": true
+  },
+  "default_quotas": [
+    {
+      "scene": "llm_chat",
+      "amount_type": "count",
+      "limit_amount": 1000,
+      "reset_cycle": "month"
+    },
+    {
+      "scene": "task",
+      "amount_type": "count",
+      "limit_amount": 100,
+      "reset_cycle": "month"
+    },
+    {
+      "scene": "sound_tts",
+      "amount_type": "count",
+      "limit_amount": 300,
+      "reset_cycle": "month"
+    },
+    {
+      "scene": "asr",
+      "amount_type": "count",
+      "limit_amount": 200,
+      "reset_cycle": "month"
+    },
+    {
+      "scene": "video_gen",
+      "amount_type": "count",
+      "limit_amount": 50,
+      "reset_cycle": "month"
+    },
+    {
+      "scene": "text_to_image",
+      "amount_type": "count",
+      "limit_amount": 200,
+      "reset_cycle": "month"
+    },
+    {
+      "scene": "image_to_image",
+      "amount_type": "count",
+      "limit_amount": 100,
+      "reset_cycle": "month"
+    }
+  ]
+}

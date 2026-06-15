@@ -1,6 +1,8 @@
 import iconv from "iconv-lite";
 import { exec as _exec, spawn } from "node:child_process";
+import fs from "node:fs";
 import net from "node:net";
+import path from "node:path";
 import util from "node:util";
 import { AppConfig } from "../../../src/config";
 import {
@@ -17,6 +19,63 @@ import { IconvUtil, ShellUtil, StrUtil } from "../../lib/util";
 import { Log } from "../log/index";
 
 const exec = util.promisify(_exec);
+
+const binarySearchPaths = [
+    "/opt/homebrew/bin",
+    "/usr/local/bin",
+    "/usr/bin",
+    "/bin",
+];
+
+const binaryEnvPath = (binary: string) => {
+    return process.env[`${binary.toUpperCase()}_PATH`];
+};
+
+const executableExists = (filePath: string) => {
+    try {
+        fs.accessSync(filePath, fs.constants.X_OK);
+        return true;
+    } catch (e) {
+        return false;
+    }
+};
+
+const resolveSpawnBinary = (binary: string) => {
+    const envPath = binaryEnvPath(binary);
+    if (envPath && executableExists(envPath)) {
+        return envPath;
+    }
+
+    try {
+        return extraResolveBin(binary);
+    } catch (e) {
+        Log.info("App.spawnBinary.extraMissing", String(e));
+    }
+
+    for (const dir of binarySearchPaths) {
+        const filePath = path.join(dir, isWin ? `${binary}.exe` : binary);
+        if (executableExists(filePath)) {
+            return filePath;
+        }
+    }
+
+    return binary;
+};
+
+const binaryPathEnv = (env: Record<string, any> = {}) => {
+    const pathKey = isWin ? "Path" : "PATH";
+    const currentPath = env[pathKey] || process.env[pathKey] || "";
+    const paths = currentPath.split(path.delimiter).filter(Boolean);
+    for (const item of binarySearchPaths) {
+        if (!paths.includes(item)) {
+            paths.unshift(item);
+        }
+    }
+    return {
+        ...env,
+        [pathKey]: paths.join(path.delimiter),
+    };
+};
 
 const outputStringConvert = (outputEncoding: "utf8" | "cp936", data: any) => {
     if (!data) {
@@ -256,9 +315,10 @@ const spawnBinary = async (
         shell?: boolean;
     } | null = null,
 ): Promise<string> => {
-    args.unshift(extraResolveBin(binary));
+    args.unshift(resolveSpawnBinary(binary));
     const res = await Apps.spawnShell(args, {
         ...(option || {}),
+        env: binaryPathEnv(option?.env || {}),
         shell: false,
     });
     return await res.result();

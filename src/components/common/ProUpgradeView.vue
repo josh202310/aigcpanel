@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { onMounted } from "vue";
-import { AppConfig } from "../../config";
-
 defineProps({
     desc: {
         type: String,
@@ -9,7 +6,9 @@ defineProps({
     },
 });
 
-
+const openMemberCenter = async () => {
+    await window.$mapi.user.open();
+};
 </script>
 
 <template>
@@ -48,16 +47,17 @@ defineProps({
                 {{ desc || $t("proUpgrade.defaultDesc") }}
             </p>
             <div>
-                <a
+                <a-button
                     class="arco-btn arco-btn-size-large arco-btn-primary px-8 rounded-full shadow-blue-200 shadow-lg hover:shadow-xl transition-all"
-                    :href="AppConfig.website"
-                    target="_blank"
+                    type="primary"
+                    size="large"
+                    @click="openMemberCenter"
                 >
-                    <icon-link />
+                    <icon-user />
                     <span class="ml-2">{{
                         $t("proUpgrade.downloadButton")
                     }}</span>
-                </a>
+                </a-button>
             </div>
         </div>
     </div>

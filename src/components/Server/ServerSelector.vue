@@ -1,12 +1,20 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useServerStore } from "../../store/modules/server";
-import { EnumServerStatus } from "../../types/Server";
+import { useServerCloudStore } from "../../store/modules/serverCloud";
+import { EnumServerStatus, EnumServerType } from "../../types/Server";
 
 import { Dialog } from "../../lib/dialog";
 import { mapError } from "../../lib/error";
+import { useUserStore } from "../../store/modules/user";
+import {
+    MEMBER_FEATURES,
+    MemberPermissionService,
+} from "../../service/MemberPermissionService";
 
 const serverStore = useServerStore();
+const serverCloudStore = useServerCloudStore();
+const userStore = useUserStore();
 
 
 const select = ref<any>(null);
@@ -16,6 +24,22 @@ const props = defineProps<{
 const recordsFilter = computed(() => {
     return serverStore.records.filter((s) =>
         s.functions.includes(props.functionName),
+    );
+});
+const canUseCloudModel = computed(() =>
+    MemberPermissionService.hasFeature(userStore, MEMBER_FEATURES.CLOUD_MODEL, [
+        MEMBER_FEATURES.CLOUD_TASK,
+        props.functionName,
+    ]),
+);
+const cloudRecordsFilter = computed(() => {
+    if (!canUseCloudModel.value) {
+        return [];
+    }
+    return serverCloudStore.records.filter(
+        (s) =>
+            s.type === EnumServerType.CLOUD &&
+            s.runtime.functions.includes(props.functionName),
     );
 });
 
@@ -32,13 +56,12 @@ const valueAutoStartStatus = computed(() => {
     return server?.runtime.autoStartStatus || EnumServerStatus.STOPPED;
 });
 const valueStatus = computed(() => {
-    
     return (
-        serverStore.records.find((s) => s.key === select.value.modelValue)
+        serverStore.records.find((s) => s.key === select.value?.modelValue)
             ?.status || EnumServerStatus.STOPPED
     );
 });
-let showCloudOptgroup = false;
+const showCloudOptgroup = computed(() => canUseCloudModel.value);
 
 const hasRecords = computed(() => {
     let count = recordsFilter.value.length;
@@ -57,7 +80,9 @@ watch(
         let config: any = null;
         
         if (!config) {
-            const server = await serverStore.getByKey(value);
+            const server =
+                (await serverStore.getByKey(value)) ||
+                (await serverCloudStore.getByKey(value));
             if (server) {
                 const res = await window.$mapi.server.config(
                     await serverStore.serverInfo(server),
