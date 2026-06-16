@@ -1,6 +1,7 @@
 import iconv from "iconv-lite";
 import { exec as _exec, spawn } from "node:child_process";
 import fs from "node:fs";
+import { createRequire } from "node:module";
 import net from "node:net";
 import path from "node:path";
 import util from "node:util";
@@ -19,6 +20,11 @@ import { IconvUtil, ShellUtil, StrUtil } from "../../lib/util";
 import { Log } from "../log/index";
 
 const exec = util.promisify(_exec);
+const require = createRequire(
+    typeof __filename === "string"
+        ? __filename
+        : path.join(process.cwd(), "package.json"),
+);
 
 const binarySearchPaths = [
     "/opt/homebrew/bin",
@@ -40,6 +46,26 @@ const executableExists = (filePath: string) => {
     }
 };
 
+const installerBinaryPath = (binary: string) => {
+    const packageMap: Record<string, string> = {
+        ffmpeg: "@ffmpeg-installer/ffmpeg",
+        ffprobe: "@ffprobe-installer/ffprobe",
+    };
+    const packageName = packageMap[binary];
+    if (!packageName) {
+        return "";
+    }
+    try {
+        const installer = require(packageName);
+        if (installer?.path && executableExists(installer.path)) {
+            return installer.path;
+        }
+    } catch (e) {
+        Log.info("App.spawnBinary.installerMissing", String(e));
+    }
+    return "";
+};
+
 const resolveSpawnBinary = (binary: string) => {
     const envPath = binaryEnvPath(binary);
     if (envPath && executableExists(envPath)) {
@@ -50,6 +76,11 @@ const resolveSpawnBinary = (binary: string) => {
         return extraResolveBin(binary);
     } catch (e) {
         Log.info("App.spawnBinary.extraMissing", String(e));
+    }
+
+    const installerPath = installerBinaryPath(binary);
+    if (installerPath) {
+        return installerPath;
     }
 
     for (const dir of binarySearchPaths) {
