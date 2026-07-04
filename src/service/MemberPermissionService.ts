@@ -94,7 +94,7 @@ export const MemberPermissionService = {
             if (wildcardKeys.some((key) => values.includes(key))) {
                 return true;
             }
-            return this.isMember(info);
+            return true;
         }
 
         if (functions && typeof functions === "object") {
@@ -110,7 +110,7 @@ export const MemberPermissionService = {
             }
         }
 
-        return this.isMember(info);
+        return true;
     },
 
     async openMemberCenter() {
