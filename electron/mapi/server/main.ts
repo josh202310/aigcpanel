@@ -49,12 +49,13 @@ const getModule = async (
     // console.log('getModule', serverInfo)
     if (!serverModule[serverInfo.localPath]) {
         try {
-            if (serverInfo.name.startsWith("Cloud")) {
-                const server = new AigcServer["Cloud"]();
-                server.type = "buildIn";
-                server.ServerApi = ServerApi;
-                await server.init();
-                serverModule[serverInfo.localPath] = server;
+           if (serverInfo.name.startsWith("Cloud")) {
+               const server = new AigcServer["Cloud"]();
+               server.type = "buildIn";
+               server.ServerApi = ServerApi;
+               server.serverConfig.cloudConfig = serverInfo.cloudConfig || {};
+               await server.init();
+               serverModule[serverInfo.localPath] = server;
             } else if (serverInfo.name in AigcServer) {
                 const server = AigcServer[serverInfo.name] as ServerContext;
                 server.type = "buildIn";

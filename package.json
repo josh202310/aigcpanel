@@ -1,7 +1,8 @@
 {
   "name": "aigcpanel",
+  "type": "module",
   "version": "2.0.0",
-  "main": "dist-electron/main/index.js",
+  "main": "dist-electron/main/index.cjs",
   "description": "开源 AI 数字人视频系统",
   "author": "ModStartLib",
   "license": "Apache-2.0",
@@ -18,7 +19,6 @@
       "VITE_DEV_SERVER_URL": "http://127.0.0.1:53021/"
     }
   },
-  "type": "module",
   "scripts": {
     "dev": "vite",
     "dev:mac": "pkill -f aigcpanel; vite",
@@ -79,7 +79,7 @@
     "@babel/runtime": "^7.24.8",
     "@devicefarmer/adbkit": "^3.2.6",
     "@electron-toolkit/preload": "^3.0.1",
-    "@electron-toolkit/utils": "^3.0.0",
+    "@electron-toolkit/utils": "^2.0.1",
     "@electron/remote": "^2.1.2",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@ffprobe-installer/ffprobe": "^2.1.2",
@@ -104,7 +104,7 @@
     "electron-context-menu": "^4.0.4",
     "express": "^5.2.1",
     "fabric": "^6.9.1",
-    "fix-path": "^4.0.0",
+    "fix-path": "^3.0.0",
     "hls.js": "^1.6.2",
     "iconv-lite": "^0.6.3",
     "js-base64": "^3.7.7",
