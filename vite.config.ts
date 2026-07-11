@@ -150,14 +150,7 @@ export default defineConfig(({command}) => {
                                 // we can use `external` to exclude them to ensure they work correctly.
                                 // Others need to put them in `dependencies` to ensure they are collected into `app.asar` after the app is built.
                                 // Of course, this is not absolute, just this way is relatively simple. :)
-                                external: externalPackages.filter(p => {
-                                    try {
-                                        const pkgJson = _require(path.resolve(__dirname, "node_modules", p, "package.json"));
-                                        return pkgJson.type !== "module";
-                                    } catch {
-                                        return true;
-                                    }
-                                }),
+                                external: externalPackages,
                             },
                         },
                     },
@@ -177,15 +170,12 @@ export default defineConfig(({command}) => {
                             sourcemap: undefined, // #332
                             minify: minify,
                             outDir: "dist-electron/preload",
+                            lib: {
+                                formats: ["cjs"],
+                                fileName: "index",
+                            },
                             rollupOptions: {
-                                external: externalPackages.filter(p => {
-                                    try {
-                                        const pkgJson = _require(path.resolve(__dirname, "node_modules", p, "package.json"));
-                                        return pkgJson.type !== "module";
-                                    } catch {
-                                        return true;
-                                    }
-                                }),
+                                external: externalPackages,
                                 output: {
                                     format: "cjs",
                                     // entryFileNames: '[name].cjs',
