@@ -200,7 +200,11 @@ const doSelectLocalDir = async () => {
 };
 
 const doSelectCloud = async () => {
-    // Cloud model selection available
+    let isPro = false;
+    
+    if (!isPro) {
+        Dialog.tipError(t("error.upgradeToProVersion"));
+    }
 };
 defineExpose({
     show,

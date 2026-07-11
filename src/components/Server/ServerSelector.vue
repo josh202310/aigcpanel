@@ -6,9 +6,15 @@ import { EnumServerStatus, EnumServerType } from "../../types/Server";
 
 import { Dialog } from "../../lib/dialog";
 import { mapError } from "../../lib/error";
+import { useUserStore } from "../../store/modules/user";
+import {
+    MEMBER_FEATURES,
+    MemberPermissionService,
+} from "../../service/MemberPermissionService";
 
 const serverStore = useServerStore();
 const serverCloudStore = useServerCloudStore();
+const userStore = useUserStore();
 
 
 const select = ref<any>(null);
@@ -20,7 +26,16 @@ const recordsFilter = computed(() => {
         s.functions.includes(props.functionName),
     );
 });
+const canUseCloudModel = computed(() =>
+    MemberPermissionService.hasFeature(userStore, MEMBER_FEATURES.CLOUD_MODEL, [
+        MEMBER_FEATURES.CLOUD_TASK,
+        props.functionName,
+    ]),
+);
 const cloudRecordsFilter = computed(() => {
+    if (!canUseCloudModel.value) {
+        return [];
+    }
     return serverCloudStore.records.filter(
         (s) =>
             s.type === EnumServerType.CLOUD &&
@@ -46,7 +61,7 @@ const valueStatus = computed(() => {
             ?.status || EnumServerStatus.STOPPED
     );
 });
-const showCloudOptgroup = computed(() => true);
+const showCloudOptgroup = computed(() => canUseCloudModel.value);
 
 const hasRecords = computed(() => {
     let count = recordsFilter.value.length;
@@ -158,12 +173,11 @@ watch(
                     </div>
                 </div>
             </a-option>
-            <a-option v-if="cloudRecordsFilter.length === 0" disabled>
-                <div class="text-xs py-2">
-                    暂无云模型
-                </div>
-            </a-option>
         </a-optgroup>
+        <a-optgroup
+            v-if="!showCloudOptgroup"
+            :label="$t('model.upgradeProForCloud')"
+        ></a-optgroup>
         <template #label="{ data }">
             <div class="text-sm flex items-center flex-nowrap truncate no-wrap">
                 <div
