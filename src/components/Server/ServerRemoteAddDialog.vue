@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import axios from "axios";
-import { ref, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { t } from "../../lang";
 import { Dialog } from "../../lib/dialog";
 import { StringUtil } from "../../lib/util";
@@ -14,9 +14,30 @@ const remoteUrl = ref("");
 const logStatus = ref("");
 const fetchedConfig = ref<any>(null);
 const validatedUrl = ref("");
+const duixDefaultUrl = ref("http://127.0.0.1:8888");
+
+// Load saved Duix server URL from config
+const loadDuixUrl = async () => {
+    try {
+        const saved = await $mapi.config.get("duixServerUrl", "");
+        if (saved) {
+            duixDefaultUrl.value = saved;
+        }
+    } catch (e) {
+        // Use default
+    }
+};
+
+const fillDuixDefault = () => {
+    remoteUrl.value = duixDefaultUrl.value;
+};
+
+onMounted(() => {
+    loadDuixUrl();
+});
 
 const show = () => {
-    remoteUrl.value = "http://127.0.0.1:8888";
+    remoteUrl.value = duixDefaultUrl.value;
     logStatus.value = "";
     loading.value = false;
     visible.value = true;
@@ -106,6 +127,17 @@ const doSubmit = async () => {
         const configData = fetchedConfig.value;
         const url = validatedUrl.value;
 
+        // Save Duix server URL if this looks like a Duix avatar server
+        if (
+            !duixDefaultUrl.value.startsWith("http://127.0.0.1:") &&
+            (url.includes("127.0.0.1") ||
+                url.includes("localhost") ||
+                url.includes("0.0.0.0"))
+        ) {
+            await $mapi.config.set("duixServerUrl", url);
+            duixDefaultUrl.value = url;
+        }
+
         // Add to store
         await serverStore.add({
             key: serverStore.generateServerKey({
@@ -143,7 +175,9 @@ const doSubmit = async () => {
 defineExpose({
     show,
     fill(params: { remoteUrl?: string }) {
-        if (params.remoteUrl !== undefined) remoteUrl.value = params.remoteUrl;
+        if (params.remoteUrl !== undefined && params.remoteUrl !== "") {
+            remoteUrl.value = params.remoteUrl;
+        }
     },
     doCheck,
     doSubmit,
@@ -181,6 +215,14 @@ const emit = defineEmits({
                     :disabled="loading"
                     @press-enter="!fetchedConfig ? doCheck() : doSubmit()"
                 />
+                <div class="mt-2">
+                    <a-button size="small" @click="fillDuixDefault">
+                        <template #icon>
+                            <i-mdi-server-outline />
+                        </template>
+                        {{ $t("model.localDuixUseDefault") }}
+                    </a-button>
+                </div>
             </div>
 
             <div

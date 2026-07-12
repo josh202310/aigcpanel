@@ -62,7 +62,13 @@ const getModule = async (
                 await server.init();
                 serverModule[serverInfo.localPath] = server;
             } else if (serverInfo.type === EnumServerType.REMOTE) {
-                const server = new AigcServer["RemoteServer"](serverInfo);
+                const remoteKind =
+                    serverInfo.config?.remoteConfig?.kind;
+                const ServerCtor =
+                    remoteKind === "duixAvatar"
+                        ? AigcServer["DuixAvatarServer"]
+                        : AigcServer["RemoteServer"];
+                const server = new ServerCtor(serverInfo);
                 server.type = "buildIn";
                 server.ServerApi = ServerApi;
                 await server.init();
